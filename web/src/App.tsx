@@ -364,6 +364,42 @@ function TernaryPlot({
   )
 }
 
+function CandidateShareInput({
+  label,
+  value,
+  onCommit,
+}: {
+  label: string
+  value: number
+  onCommit: (value: number) => void
+}) {
+  const [draft, setDraft] = useState<{ baseValue: number; text: string } | null>(null)
+  const displayValue = draft?.baseValue === value ? draft.text : String(value)
+
+  const commitDraft = () => {
+    onCommit(Number(displayValue))
+    setDraft(null)
+  }
+
+  return (
+    <label>
+      {label}
+      <input
+        type="number"
+        min="0.001"
+        max="0.999"
+        step="0.001"
+        value={displayValue}
+        onChange={(event) => setDraft({ baseValue: value, text: event.target.value })}
+        onBlur={commitDraft}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.currentTarget.blur()
+        }}
+      />
+    </label>
+  )
+}
+
 function DistrictControls({
   label,
   district,
@@ -413,28 +449,16 @@ function DistrictControls({
                 />
               </label>
             )}
-            <label>
-              {copy.candidate1Share}
-              <input
-                type="number"
-                min="0.001"
-                max="0.999"
-                step="0.001"
-                value={cluster.u1}
-                onChange={(event) => onChange(updateCluster(district, cluster.id, { u1: Number(event.target.value) }))}
-              />
-            </label>
-            <label>
-              {copy.candidate2Share}
-              <input
-                type="number"
-                min="0.001"
-                max="0.999"
-                step="0.001"
-                value={cluster.u2}
-                onChange={(event) => onChange(updateCluster(district, cluster.id, { u2: Number(event.target.value) }))}
-              />
-            </label>
+            <CandidateShareInput
+              label={copy.candidate1Share}
+              value={cluster.u1}
+              onCommit={(value) => onChange(updateCluster(district, cluster.id, { u1: value }))}
+            />
+            <CandidateShareInput
+              label={copy.candidate2Share}
+              value={cluster.u2}
+              onCommit={(value) => onChange(updateCluster(district, cluster.id, { u2: value }))}
+            />
             <label>
               {copy.concentration}
               <input
