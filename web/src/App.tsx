@@ -264,6 +264,14 @@ function TernaryPlot({
     onDrag(pointerToBarycentric(event, svgRef.current))
   }
 
+  const handlePointerUp = (event: PointerEvent<SVGSVGElement>) => {
+    const svg = svgRef.current
+    if (svg?.hasPointerCapture(event.pointerId)) {
+      svg.releasePointerCapture(event.pointerId)
+    }
+    onDragEnd()
+  }
+
   return (
     <section className="plot-card">
       <div className="plot-heading">
@@ -277,8 +285,8 @@ function TernaryPlot({
         role="img"
         aria-label={copy.ternaryAria(label)}
         onPointerMove={handlePointerMove}
-        onPointerUp={onDragEnd}
-        onPointerLeave={onDragEnd}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
         <polygon points={`0,${SQRT3_OVER_2} 1,${SQRT3_OVER_2} 0.5,0`} className="triangle-bg" />
         {heat.map(({ point, value }) => {
@@ -312,7 +320,8 @@ function TernaryPlot({
               className={`cluster-handle ${active ? 'active' : ''}`}
               transform={`translate(${position.x} ${SQRT3_OVER_2 - position.y})`}
               onPointerDown={(event) => {
-                event.currentTarget.setPointerCapture(event.pointerId)
+                event.preventDefault()
+                svgRef.current?.setPointerCapture(event.pointerId)
                 onDragStart(cluster.id)
               }}
             >

@@ -3,11 +3,12 @@
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
 afterEach(() => {
   cleanup()
+  vi.restoreAllMocks()
 })
 
 describe('App language selector', () => {
@@ -38,5 +39,24 @@ describe('single-population controls', () => {
 
     expect(screen.getAllByLabelText(/bloc weight/i)).toHaveLength(4)
     expect(container.querySelectorAll('.cluster-controls.mixture')).toHaveLength(4)
+  })
+})
+
+describe('ternary dragging', () => {
+  it('captures pointer movement on the stable svg surface', () => {
+    Object.defineProperty(SVGElement.prototype, 'setPointerCapture', {
+      configurable: true,
+      value() {},
+    })
+    const captureSpy = vi.spyOn(SVGElement.prototype, 'setPointerCapture').mockImplementation(() => undefined)
+
+    const { container } = render(<App />)
+    const svg = screen.getByRole('img', { name: /district 1 ternary distribution plot/i })
+    const handle = container.querySelector('.cluster-handle')
+
+    expect(handle).not.toBeNull()
+    fireEvent.pointerDown(handle!, { pointerId: 7 })
+
+    expect(captureSpy.mock.contexts[0]).toBe(svg)
   })
 })
