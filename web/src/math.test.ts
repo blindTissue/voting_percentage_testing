@@ -6,6 +6,7 @@ import {
   collisionProbabilityBinomial,
   collisionProbabilityDirichletMultinomial,
   collisionProbabilityMixture,
+  svgScreenToBarycentric,
   svgToBarycentric,
 } from './math'
 
@@ -26,6 +27,16 @@ describe('ternary coordinate conversion', () => {
     const original: [number, number, number] = [0.62, 0.31, 0.07]
     const point = barycentricToSvg(original)
     const roundTrip = svgToBarycentric(point.x, point.y)
+
+    expect(roundTrip[0]).toBeCloseTo(original[0], 10)
+    expect(roundTrip[1]).toBeCloseTo(original[1], 10)
+    expect(roundTrip[2]).toBeCloseTo(original[2], 10)
+  })
+
+  it('converts visible svg screen coordinates back to barycentric coordinates', () => {
+    const original: [number, number, number] = [0.45, 0.35, 0.2]
+    const point = barycentricToSvg(original)
+    const roundTrip = svgScreenToBarycentric(point.x, Math.sqrt(3) / 2 - point.y)
 
     expect(roundTrip[0]).toBeCloseTo(original[0], 10)
     expect(roundTrip[1]).toBeCloseTo(original[1], 10)

@@ -32,6 +32,10 @@ export function svgToBarycentric(x: number, y: number): Barycentric {
   return projectToSimplex([u1, u2, other])
 }
 
+export function svgScreenToBarycentric(x: number, y: number): Barycentric {
+  return svgToBarycentric(x, SQRT3_OVER_2 - y)
+}
+
 export function projectToSimplex(values: Barycentric): Barycentric {
   const clipped = values.map((value) => Math.max(0.001, value)) as Barycentric
   const total = clipped[0] + clipped[1] + clipped[2]

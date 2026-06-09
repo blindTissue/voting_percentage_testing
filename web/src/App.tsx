@@ -8,7 +8,7 @@ import {
   collisionProbabilityMixture,
   logGamma,
   normalizeWeights,
-  svgToBarycentric,
+  svgScreenToBarycentric,
 } from './math'
 import type { Barycentric } from './math'
 
@@ -222,6 +222,19 @@ function sliderToKappa(value: number, scale: KappaScale) {
   return scale === 'log' ? 10 ** value : value
 }
 
+function pointerToBarycentric(event: PointerEvent<SVGSVGElement>, svg: SVGSVGElement): Barycentric {
+  const transform = svg.getScreenCTM()
+  if (transform) {
+    const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(transform.inverse())
+    return svgScreenToBarycentric(point.x, point.y)
+  }
+
+  const rect = svg.getBoundingClientRect()
+  const x = (event.clientX - rect.left) / rect.width
+  const screenY = ((event.clientY - rect.top) / rect.height) * SQRT3_OVER_2
+  return svgScreenToBarycentric(x, screenY)
+}
+
 function TernaryPlot({
   district,
   label,
@@ -247,11 +260,8 @@ function TernaryPlot({
 
   const handlePointerMove = (event: PointerEvent<SVGSVGElement>) => {
     if (!dragTarget || !svgRef.current) return
-    const rect = svgRef.current.getBoundingClientRect()
-    const x = (event.clientX - rect.left) / rect.width
-    const screenY = ((event.clientY - rect.top) / rect.height) * SQRT3_OVER_2
-    const modelY = SQRT3_OVER_2 - screenY
-    onDrag(svgToBarycentric(x, modelY))
+    event.preventDefault()
+    onDrag(pointerToBarycentric(event, svgRef.current))
   }
 
   return (
