@@ -157,7 +157,7 @@ function TernaryPlot({
     <section className="plot-card">
       <div className="plot-heading">
         <h2>{label}</h2>
-        <p>{mode === 'single' ? 'Drag the center; u values update live.' : 'Drag numbered cluster centers; u values update live.'}</p>
+        <p>{mode === 'single' ? 'Drag the center point to change the expected vote shares.' : 'Drag numbered blocs to change each group of voters.'}</p>
       </div>
       <svg
         ref={svgRef}
@@ -251,7 +251,7 @@ function DistrictControls({
           <div className="cluster-controls" key={cluster.id}>
             <h3>Cluster {index + 1}</h3>
             <label>
-              weight
+              Bloc weight
               <input
                 type="number"
                 min="0"
@@ -261,7 +261,7 @@ function DistrictControls({
               />
             </label>
             <label>
-              u1
+              Candidate 1 share
               <input
                 type="number"
                 min="0.001"
@@ -272,7 +272,7 @@ function DistrictControls({
               />
             </label>
             <label>
-              u2
+              Candidate 2 share
               <input
                 type="number"
                 min="0.001"
@@ -283,7 +283,7 @@ function DistrictControls({
               />
             </label>
             <label>
-              kappa
+              Concentration
               <input
                 type="range"
                 min={kappaScale === 'log' ? -1 : 0.1}
@@ -297,7 +297,7 @@ function DistrictControls({
               <span className="slider-value">{cluster.kappa < 100 ? cluster.kappa.toFixed(2) : cluster.kappa.toFixed(0)}</span>
             </label>
             <p className={other > 0 ? 'cluster-note' : 'cluster-note error'}>
-              other = {other.toFixed(3)}; alpha = {clusterAlpha(cluster).map((value) => value.toFixed(2)).join(', ')}
+              Other share = {other.toFixed(3)}; model strength = {clusterAlpha(cluster).map((value) => value.toFixed(2)).join(', ')}
             </p>
           </div>
         )
@@ -352,29 +352,27 @@ function App() {
   return (
     <main>
       <header className="page-header">
-        {/* <p className="eyebrow">Probability that vote </p> */}
-        <h1>Same vote count probability calculation</h1>
+        <p className="eyebrow">vote count probability explorer</p>
+        <h1>Same Vote Count Probability Explorer</h1>
         <p>
-          Recently, there has been some claims of voter fraud in the 9th Korean local elections.
-          The claim stems from the same vote count for two candidates across different districts.
-          The "probability" that same count comes out differs by claim.
-          This is my approach of calculating the probability.
-          Like always, statistical models are not real. They are a model of the real world.
-          This is a Dirichlet prior, categorical posterior model.
-          Drag, change the prior distribution as you feel fit.
+          Some Korean election districts reported identical vote counts for two candidates, raising public questions
+          about how unlikely that is. This tool lets you explore that question under explicit probability models.
+          Adjust the vote-share distributions for two districts, choose a model, and calculate the chance that both
+          districts produce the same counts for candidate 1 and candidate 2. This does not prove or disprove fraud;
+          it shows how the probability changes as your assumptions change.
         </p>
         <div className="mode-toggle" role="group" aria-label="distribution model">
           <button type="button" className={modelMode === 'single' ? 'selected' : ''} onClick={() => { setModelMode('single'); setProbability(null) }}>
-            Single Dirichlet
+            Single population pattern
           </button>
           <button type="button" className={modelMode === 'mixture' ? 'selected' : ''} onClick={() => { setModelMode('mixture'); setProbability(null) }}>
-            Mixture clusters
+            Multiple voter blocs
           </button>
         </div>
         <div className="header-controls">
           {modelMode === 'mixture' && (
             <label>
-              cluster count
+              voter bloc count
               <select
                 value={clusterCount}
                 onChange={(event) => {
@@ -401,7 +399,7 @@ function App() {
             </select>
           </label>
           <label>
-            kappa scale
+            concentration scale
             <select
               value={kappaScale}
               onChange={(event) => {
@@ -416,7 +414,7 @@ function App() {
         </div>
         {computeMode === 'exact' && (
           <p className="warning-note">
-            Exact mode can freeze the browser for large totals, especially with mixture clusters. Use it for small totals or when you are willing to wait.
+            Exact mode can freeze the browser for large totals, especially with multiple voter blocs. Use it for small totals or when you are willing to wait.
           </p>
         )}
       </header>
@@ -443,15 +441,15 @@ function App() {
       </section>
 
       <section className="control-grid">
-        <DistrictControls label="District 1 controls" district={districtA} clusterCount={clusterCount} mode={modelMode} kappaScale={kappaScale} onChange={setDistrictA} />
-        <DistrictControls label="District 2 controls" district={districtB} clusterCount={clusterCount} mode={modelMode} kappaScale={kappaScale} onChange={setDistrictB} />
+        <DistrictControls label="District 1 assumptions" district={districtA} clusterCount={clusterCount} mode={modelMode} kappaScale={kappaScale} onChange={setDistrictA} />
+        <DistrictControls label="District 2 assumptions" district={districtB} clusterCount={clusterCount} mode={modelMode} kappaScale={kappaScale} onChange={setDistrictB} />
       </section>
 
       <section className="result-panel">
         <div>
-          <p className="eyebrow">event</p>
-          <h2>Same candidate 1 count and same candidate 2 count</h2>
-          <p>{computeMode === 'exact' ? 'Exact mode sums the full Dirichlet-Multinomial mixture and can be slow for large totals.' : 'Fast mode uses a bivariate-normal lattice approximation so large vote totals stay interactive.'}</p>
+          <p className="eyebrow">result</p>
+          <h2>Chance of the two districts matching on both candidate counts</h2>
+          <p>{computeMode === 'exact' ? 'This calculation checks every possible matching count. It may take a while for large districts.' : 'This calculation uses a fast estimate so you can explore large districts interactively.'}</p>
         </div>
         <button type="button" onClick={computeProbability} disabled={isComputing}>
           {isComputing ? 'Computing...' : computeMode === 'exact' ? 'Compute exact probability' : 'Compute approximate probability'}
