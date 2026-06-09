@@ -40,6 +40,16 @@ describe('single-population controls', () => {
     expect(screen.getAllByLabelText(/bloc weight/i)).toHaveLength(4)
     expect(container.querySelectorAll('.cluster-controls.mixture')).toHaveLength(4)
   })
+
+  it('keeps candidate share inputs above zero so the model does not crash', () => {
+    render(<App />)
+    const candidate1Input = screen.getAllByLabelText(/candidate 1 share/i)[0] as HTMLInputElement
+
+    fireEvent.change(candidate1Input, { target: { value: '0' } })
+
+    expect(candidate1Input.value).toBe('0.001')
+    expect(screen.getByRole('heading', { name: /same vote count probability explorer/i })).toBeInTheDocument()
+  })
 })
 
 describe('ternary dragging', () => {

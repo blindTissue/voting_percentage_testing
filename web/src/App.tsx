@@ -37,6 +37,7 @@ type DragTarget = {
 
 const SQRT3_OVER_2 = Math.sqrt(3) / 2
 const GRID_SIZE = 34
+const MIN_SHARE = 0.001
 
 const COPY = {
   en: {
@@ -207,10 +208,38 @@ function heatColor(value: number) {
   return `hsl(${hue} 92% ${lightness}%)`
 }
 
+function finiteOrMin(value: number) {
+  return Number.isFinite(value) ? value : MIN_SHARE
+}
+
+function normalizeSharePatch(cluster: Cluster, patch: Partial<Cluster>): Partial<Cluster> {
+  if (patch.u1 === undefined && patch.u2 === undefined) return patch
+
+  let u1 = Math.max(MIN_SHARE, finiteOrMin(patch.u1 ?? cluster.u1))
+  let u2 = Math.max(MIN_SHARE, finiteOrMin(patch.u2 ?? cluster.u2))
+  const maxCandidateShare = 1 - MIN_SHARE
+
+  if (u1 + u2 > maxCandidateShare) {
+    if (patch.u1 !== undefined && patch.u2 === undefined) {
+      u1 = Math.max(MIN_SHARE, maxCandidateShare - u2)
+    } else if (patch.u2 !== undefined && patch.u1 === undefined) {
+      u2 = Math.max(MIN_SHARE, maxCandidateShare - u1)
+    } else {
+      const scale = maxCandidateShare / (u1 + u2)
+      u1 *= scale
+      u2 *= scale
+    }
+  }
+
+  return { ...patch, u1, u2 }
+}
+
 function updateCluster(district: District, clusterId: string, patch: Partial<Cluster>): District {
   return {
     ...district,
-    clusters: district.clusters.map((cluster) => (cluster.id === clusterId ? { ...cluster, ...patch } : cluster)),
+    clusters: district.clusters.map((cluster) =>
+      cluster.id === clusterId ? { ...cluster, ...normalizeSharePatch(cluster, patch) } : cluster,
+    ),
   }
 }
 
