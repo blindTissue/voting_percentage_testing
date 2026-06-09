@@ -1,0 +1,18 @@
+[project]
+name = "voting-percentage-testing"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "ipykernel>=7.2.0",
+    "matplotlib>=3.10.9",
+    "numpy>=2.4.6",
+    "scipy>=1.17.1",
+    "streamlit>=1.58.0",
+]
+
+[dependency-groups]
+dev = [
+    "nbconvert>=7.17.1",
+]
